@@ -6,6 +6,9 @@
  */
 #include "CRCs.h"
 #include "UARTComms.h"
+#include "usart.h"
+#include "stdint.h"
+#include "string.h"
 #define PackageHead1 0xFA
 #define PackageHead2 0xAF
 
