@@ -1,159 +1,195 @@
-/**
-  ******************************************************************************
-  * @file    MPU6050.c
-  * @brief   Source file for MPU6050 driver
-  ******************************************************************************
-  */
-
+/*
+ * MPU6050.c
+ *
+ *  Created on: Feb 24, 2026
+ *      Author: HunterCHCL
+ */
+#define MPU6050Addr 0xD0
+#include "i2c.h"
+#define MPU6050_I2C hi2c1
 #include "MPU6050.h"
 
-// Internal function to write a byte to a register
-HAL_StatusTypeDef MPU6050_Write_Reg(uint8_t reg, uint8_t data) {
-    return HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
+uint8_t sendBuffer[2];
+
+/*
+@brief  MPU6050写寄存器
+@param  RegAdress 寄存器地址
+@param  Data 要写入寄存器的数据
+*/
+void MPU6050_WriteReg(uint8_t RegAdress, uint8_t Data)
+{
+    uint8_t pBuffer[2] = {RegAdress, Data};
+    HAL_I2C_Master_Transmit(&MPU6050_I2C, MPU6050Addr, pBuffer, 2, HAL_MAX_DELAY);
 }
 
-// Internal function to read a byte from a register
-HAL_StatusTypeDef MPU6050_Read_Reg(uint8_t reg, uint8_t *data) {
-    return HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, 1, HAL_MAX_DELAY);
+/*
+@brief  MPU6050读寄存器
+@param  RegAdress 寄存器地址
+@param  Data 读取寄存器的数据指针
+*/
+void MPU6050_ReadReg(uint8_t RegAdress, uint8_t *Data)
+{
+    HAL_I2C_Master_Transmit(&MPU6050_I2C, MPU6050Addr, &RegAdress, 1, HAL_MAX_DELAY);
+    HAL_I2C_Master_Receive(&MPU6050_I2C, MPU6050Addr, Data, 1, HAL_MAX_DELAY);
 }
 
-// Internal function to read multiple bytes
-HAL_StatusTypeDef MPU6050_Read_Regs(uint8_t reg, uint8_t *data, uint8_t len) {
-    return HAL_I2C_Mem_Read(&hi2c1, MPU6050_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, len, HAL_MAX_DELAY);
+/*
+@brief  MPU6050连续读寄存器
+@param  RegAdress 寄存器起始地址
+@param  Data 数据存储指针
+@param  Length 读取长度
+*/
+void MPU6050_ReadMultiReg(uint8_t RegAdress, uint8_t *Data, uint16_t Length)
+{
+    HAL_I2C_Master_Transmit(&MPU6050_I2C, MPU6050Addr, &RegAdress, 1, HAL_MAX_DELAY);
+    HAL_I2C_Master_Receive(&MPU6050_I2C, MPU6050Addr, Data, Length, HAL_MAX_DELAY);
 }
 
-/**
- * @brief  Initialize MPU6050
- * @param  gyro_sens: Gyroscope sensitivity (MPU6050_GYRO_SENS_250, etc.)
- * @param  accel_sens: Accelerometer sensitivity (MPU6050_ACCEL_SENS_2G, etc.)
- * @retval HAL status
- */
-HAL_StatusTypeDef MPU6050_Init(uint8_t gyro_sens, uint8_t accel_sens) {
-    HAL_StatusTypeDef status;
-
-    // Wake up the sensor
-    status = MPU6050_Write_Reg(MPU6050_REG_PWR_MGMT_1, 0x00);
-    if (status != HAL_OK) return status;
-
-    HAL_Delay(100); // Wait for sensor to stabilize
-
-    // Set sample rate divider
-    status = MPU6050_Write_Reg(MPU6050_REG_SMPLRT_DIV, 0x07);
-    if (status != HAL_OK) return status;
-
-    // Set gyroscope configuration
-    status = MPU6050_Write_Reg(MPU6050_REG_GYRO_CONFIG, gyro_sens);
-    if (status != HAL_OK) return status;
-
-    // Set accelerometer configuration
-    status = MPU6050_Write_Reg(MPU6050_REG_ACCEL_CONFIG, accel_sens);
-    if (status != HAL_OK) return status;
-
-    // Configure low pass filter
-    status = MPU6050_Write_Reg(MPU6050_REG_CONFIG, 0x00);
-    if (status != HAL_OK) return status;
-
-    return HAL_OK;
+/*
+@brief  MPU6050初始化
+@return 无
+*/
+void MPU6050_Init(void)
+{
+    HAL_Delay(100);
+    MPU6050_WriteReg(MPU6050_PWR_MGMT_1, 0x01);     // 电源管理寄存器1，取消睡眠模式，时钟源为X轴陀螺仪
+	MPU6050_WriteReg(MPU6050_PWR_MGMT_2, 0x00);		// 电源管理寄存器2，所有轴均不待机
+	MPU6050_WriteReg(MPU6050_SMPLRT_DIV, 0x09);		// 采样率分频，100Hz
+	MPU6050_WriteReg(MPU6050_CONFIG, 0x06);			// 配置寄存器，DLPF 5Hz
+	MPU6050_WriteReg(MPU6050_GYRO_CONFIG, 0x18);	// 陀螺仪满量程 ±2000dps
+	MPU6050_WriteReg(MPU6050_ACCEL_CONFIG, 0x18);	// 加速度计满量程 ±16g
 }
 
-/**
- * @brief  Read all sensor data
- * @param  data: Pointer to MPU6050_t structure
- * @retval HAL status
- */
-HAL_StatusTypeDef MPU6050_Read_All(MPU6050_t *data) {
-    uint8_t buffer[14];
-    HAL_StatusTypeDef status;
+/*
+@brief  读取MPU6050原始数据
+@param  DataStruct MPU6050的数据结构体指针
+@return 无
+*/
+void MPU6050_ReadAll(MPU6050_Data_t *DataStruct)
+{
+    uint8_t data[14];
+    MPU6050_ReadMultiReg(MPU6050_ACCEL_XOUT_H, data, 14);
 
-    status = MPU6050_Read_Regs(MPU6050_REG_ACCEL_XOUT_H, buffer, 14);
-    if (status != HAL_OK) return status;
-
-    data->Accel_X = (int16_t)(buffer[0] << 8 | buffer[1]);
-    data->Accel_Y = (int16_t)(buffer[2] << 8 | buffer[3]);
-    data->Accel_Z = (int16_t)(buffer[4] << 8 | buffer[5]);
-    data->Temp = (int16_t)(buffer[6] << 8 | buffer[7]);
-    data->Gyro_X = (int16_t)(buffer[8] << 8 | buffer[9]);
-    data->Gyro_Y = (int16_t)(buffer[10] << 8 | buffer[11]);
-    data->Gyro_Z = (int16_t)(buffer[12] << 8 | buffer[13]);
-
-    return HAL_OK;
+    DataStruct->AccelX_Raw = (int16_t)(data[0] << 8 | data[1]);
+    DataStruct->AccelY_Raw = (int16_t)(data[2] << 8 | data[3]);
+    DataStruct->AccelZ_Raw = (int16_t)(data[4] << 8 | data[5]);
+    DataStruct->GyroX_Raw = (int16_t)(data[8] << 8 | data[9]);
+    DataStruct->GyroY_Raw = (int16_t)(data[10] << 8 | data[11]);
+    DataStruct->GyroZ_Raw = (int16_t)(data[12] << 8 | data[13]);
 }
 
-/**
- * @brief  Read accelerometer data
- * @param  data: Pointer to MPU6050_t structure
- * @retval HAL status
- */
-HAL_StatusTypeDef MPU6050_Read_Accel(MPU6050_t *data) {
-    uint8_t buffer[6];
-    HAL_StatusTypeDef status;
-
-    status = MPU6050_Read_Regs(MPU6050_REG_ACCEL_XOUT_H, buffer, 6);
-    if (status != HAL_OK) return status;
-
-    data->Accel_X = (int16_t)(buffer[0] << 8 | buffer[1]);
-    data->Accel_Y = (int16_t)(buffer[2] << 8 | buffer[3]);
-    data->Accel_Z = (int16_t)(buffer[4] << 8 | buffer[5]);
-
-    return HAL_OK;
+/*
+@brief  直接获取加速度和陀螺仪原始数据
+@param  AccX 加速度X轴原始数据指针
+@param  AccY 加速度Y轴原始数据指针
+@param  AccZ 加速度Z轴原始数据指针
+@param  GyroX 陀螺仪X轴原始数据指针
+@param  GyroY 陀螺仪Y轴原始数据指针
+@param  GyroZ 陀螺仪Z轴原始数据指针
+@return 无
+*/
+void MPU6050_GetData(int16_t *AccX, int16_t *AccY, int16_t *AccZ, int16_t *GyroX, int16_t *GyroY, int16_t *GyroZ)
+{
+    uint8_t data[14];
+    MPU6050_ReadMultiReg(MPU6050_ACCEL_XOUT_H, data, 14);
+    *AccX = (int16_t)(data[0] << 8 | data[1]);
+    *AccY = (int16_t)(data[2] << 8 | data[3]);
+    *AccZ = (int16_t)(data[4] << 8 | data[5]);
+    *GyroX = (int16_t)(data[8] << 8 | data[9]);
+    *GyroY = (int16_t)(data[10] << 8 | data[11]);
+    *GyroZ = (int16_t)(data[12] << 8 | data[13]);
 }
 
-/**
- * @brief  Read gyroscope data
- * @param  data: Pointer to MPU6050_t structure
- * @retval HAL status
- */
-HAL_StatusTypeDef MPU6050_Read_Gyro(MPU6050_t *data) {
-    uint8_t buffer[6];
-    HAL_StatusTypeDef status;
-
-    status = MPU6050_Read_Regs(MPU6050_REG_GYRO_XOUT_H, buffer, 6);
-    if (status != HAL_OK) return status;
-
-    data->Gyro_X = (int16_t)(buffer[0] << 8 | buffer[1]);
-    data->Gyro_Y = (int16_t)(buffer[2] << 8 | buffer[3]);
-    data->Gyro_Z = (int16_t)(buffer[4] << 8 | buffer[5]);
-
-    return HAL_OK;
+/*
+@brief  转换加速度原始值为g (±16g范围)
+@param  AccelRaw 加速度原始值
+@return 转换后的g值
+*/
+float MPU6050_Accel_To_G_16G(int16_t AccelRaw)
+{
+    return AccelRaw / 2048.0f;
 }
 
-/**
- * @brief  Read temperature data
- * @param  data: Pointer to MPU6050_t structure
- * @retval HAL status
- */
-HAL_StatusTypeDef MPU6050_Read_Temp(MPU6050_t *data) {
-    uint8_t buffer[2];
-    HAL_StatusTypeDef status;
-
-    status = MPU6050_Read_Regs(MPU6050_REG_TEMP_OUT_H, buffer, 2);
-    if (status != HAL_OK) return status;
-
-    data->Temp = (int16_t)(buffer[0] << 8 | buffer[1]);
-
-    return HAL_OK;
+/*
+@brief  转换陀螺仪原始值为dps (±2000dps范围)
+@param  GyroRaw 陀螺仪原始值
+@return 转换后的dps值
+*/
+float MPU6050_Gyro_To_DegPerSec_2000(int16_t GyroRaw)
+{
+    return GyroRaw / 16.4f;
 }
 
-/**
- * @brief  Read all sensor data as int16_t array
- * @param  data: Pointer to int16_t array (must have at least 7 elements)
- *         Order: Accel_X, Accel_Y, Accel_Z, Temp, Gyro_X, Gyro_Y, Gyro_Z
- * @retval HAL status
- */
-HAL_StatusTypeDef MPU6050_Read_All_Int16(int16_t *data) {
-    uint8_t buffer[14];
-    HAL_StatusTypeDef status;
 
-    status = MPU6050_Read_Regs(MPU6050_REG_ACCEL_XOUT_H, buffer, 14);
-    if (status != HAL_OK) return status;
+/*
+@brief  校准函数，静止放置时调用以更新MPU6050数据结构体中的偏移量
+@param  DataStruct MPU6050的数据结构体指针
+@return 无
+*/
+void MPU6050_Calibrate(MPU6050_Data_t *DataStruct)
+{
+    int32_t ax = 0, ay = 0, az = 0;
+    int32_t gx = 0, gy = 0, gz = 0;
+    const int num_samples = 100;
 
-    data[0] = (int16_t)(buffer[0] << 8 | buffer[1]);  // Accel_X
-    data[1] = (int16_t)(buffer[2] << 8 | buffer[3]);  // Accel_Y
-    data[2] = (int16_t)(buffer[4] << 8 | buffer[5]);  // Accel_Z
-    data[3] = (int16_t)(buffer[6] << 8 | buffer[7]);  // Temp
-    data[4] = (int16_t)(buffer[8] << 8 | buffer[9]);  // Gyro_X
-    data[5] = (int16_t)(buffer[10] << 8 | buffer[11]); // Gyro_Y
-    data[6] = (int16_t)(buffer[12] << 8 | buffer[13]); // Gyro_Z
+    for(int i = 0; i < num_samples; i++)
+    {
+        MPU6050_ReadAll(DataStruct);
+        ax += DataStruct->AccelX_Raw;
+        ay += DataStruct->AccelY_Raw;
+        az += DataStruct->AccelZ_Raw;
+        gx += DataStruct->GyroX_Raw;
+        gy += DataStruct->GyroY_Raw;
+        gz += DataStruct->GyroZ_Raw;
+        HAL_Delay(10);
+    }
 
-    return HAL_OK;
+    DataStruct->AccelX_Offset = ax / num_samples;
+    DataStruct->AccelY_Offset = ay / num_samples;
+    DataStruct->AccelZ_Offset = (az / num_samples) - 2048; // ±16g模式下，1g = 2048 LSB
+    DataStruct->GyroX_Offset = gx / num_samples;
+    DataStruct->GyroY_Offset = gy / num_samples;
+    DataStruct->GyroZ_Offset = gz / num_samples;
+}
+
+/*
+@brief  处理数据并解算姿态角
+@param  DataStruct MPU6050的数据结构体指针，包含原始数据、偏移量和计算结果
+@return 无
+*/
+void MPU6050_ProcessData(MPU6050_Data_t *DataStruct)
+{
+    // 1. 减去零偏后的原始数据
+    int16_t ax = DataStruct->AccelX_Raw - DataStruct->AccelX_Offset;
+    int16_t ay = DataStruct->AccelY_Raw - DataStruct->AccelY_Offset;
+    int16_t az = DataStruct->AccelZ_Raw - DataStruct->AccelZ_Offset;
+    int16_t gx = DataStruct->GyroX_Raw - DataStruct->GyroX_Offset;
+    int16_t gy = DataStruct->GyroY_Raw - DataStruct->GyroY_Offset;
+    int16_t gz = DataStruct->GyroZ_Raw - DataStruct->GyroZ_Offset;
+
+    // 2. 转换为物理单位
+    // ±16g -> 2048 LSB/g
+    DataStruct->AccelX = ax / 2048.0f;
+    DataStruct->AccelY = ay / 2048.0f;
+    DataStruct->AccelZ = az / 2048.0f;
+
+    // ±2000dps -> 16.4 LSB/dps
+    DataStruct->GyroX = gx / 16.4f;
+    DataStruct->GyroY = gy / 16.4f;
+    DataStruct->GyroZ = gz / 16.4f;
+
+    // 3. 姿态解算 (互补滤波)
+    float dt = 0.01f; // 100Hz采样率
+    float alpha = 0.98f; // 互补系数
+
+    // 加速度计计算的角度项
+    float accelPitch = atan2f(DataStruct->AccelY, DataStruct->AccelZ) * 57.29578f; // 180/PI
+    float accelRoll = atan2f(-DataStruct->AccelX, sqrtf(DataStruct->AccelY * DataStruct->AccelY + DataStruct->AccelZ * DataStruct->AccelZ)) * 57.29578f;
+
+    // 互补滤波融合
+    DataStruct->Pitch = alpha * (DataStruct->Pitch + DataStruct->GyroX * dt) + (1.0f - alpha) * accelPitch;
+    DataStruct->Roll = alpha * (DataStruct->Roll + DataStruct->GyroY * dt) + (1.0f - alpha) * accelRoll;
+    
+    // Yaw轴仅靠积分，由于没有磁力计，随着时间会有漂移
+    DataStruct->Yaw += DataStruct->GyroZ * dt;
 }

@@ -1,4 +1,7 @@
 "./Core/Src/CRCs.o"
+"./Core/Src/MPU6050.o"
+"./Core/Src/OLED.o"
+"./Core/Src/OLED_Font.o"
 "./Core/Src/UARTComms.o"
 "./Core/Src/crc.o"
 "./Core/Src/dma.o"

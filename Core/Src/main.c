@@ -27,6 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "UARTComms.h"
+#include "OLED.h"
+#include "OLED_Font.h"
+#include "MPU6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -94,14 +97,37 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   MX_CRC_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   UARTComms_Init();
+  OLED_Init();
+  MPU6050_Init();
+  MPU6050_Data_t MPU6050_Data;
+  MPU6050_Calibrate(&MPU6050_Data);
+  uint8_t i=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  HAL_Delay(10);
+	  MPU6050_ReadAll(&MPU6050_Data);
+    MPU6050_ProcessData(&MPU6050_Data);
+    if(i==50)
+    {
+//	  OLED_ShowFloat(1, 1, MPU6050_Data.AccelX, 3);
+//	  OLED_ShowFloat(1, 6, MPU6050_Data.AccelY, 3);
+//	  OLED_ShowFloat(1, 11, MPU6050_Data.AccelZ, 3);
+//	  OLED_ShowFloat(2, 1, MPU6050_Data.GyroX, 3);
+//	  OLED_ShowFloat(2, 6, MPU6050_Data.GyroY, 3);
+//	  OLED_ShowFloat(2, 11, MPU6050_Data.GyroZ, 3);
+    OLED_ShowFloat(1, 1, MPU6050_Data.Pitch, 3);
+    OLED_ShowFloat(2, 6, MPU6050_Data.Roll, 3);
+    OLED_ShowFloat(3, 11, MPU6050_Data.Yaw, 3);
+    i=0;
+    }
+    i++;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

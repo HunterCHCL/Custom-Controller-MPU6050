@@ -1,5 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
- ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
+Core/Src/MPU6050.o: ../Core/Src/MPU6050.c ../Core/Inc/i2c.h \
+ ../Core/Inc/main.h ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h \
@@ -24,10 +24,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
- ../Core/Inc/crc.h ../Core/Inc/main.h ../Core/Inc/dma.h ../Core/Inc/i2c.h \
- ../Core/Inc/usart.h ../Core/Inc/gpio.h ../Core/Inc/UARTComms.h \
- ../Core/Inc/OLED.h ../Core/Inc/i2c.h ../Core/Inc/OLED_Font.h \
- ../Core/Inc/OLED_Font.h ../Core/Inc/MPU6050.h
+ ../Core/Inc/MPU6050.h
+../Core/Inc/i2c.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 ../Core/Inc/stm32f1xx_hal_conf.h:
@@ -54,15 +52,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
-../Core/Inc/crc.h:
-../Core/Inc/main.h:
-../Core/Inc/dma.h:
-../Core/Inc/i2c.h:
-../Core/Inc/usart.h:
-../Core/Inc/gpio.h:
-../Core/Inc/UARTComms.h:
-../Core/Inc/OLED.h:
-../Core/Inc/i2c.h:
-../Core/Inc/OLED_Font.h:
-../Core/Inc/OLED_Font.h:
 ../Core/Inc/MPU6050.h:
