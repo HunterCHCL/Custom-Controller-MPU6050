@@ -105,6 +105,7 @@ int main(void)
   MPU6050_Data_t MPU6050_Data;
   MPU6050_Calibrate(&MPU6050_Data);
   uint8_t i=0;
+  uint8_t buffer[50];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,6 +126,9 @@ int main(void)
     OLED_ShowFloat(1, 1, MPU6050_Data.Pitch, 3);
     OLED_ShowFloat(2, 6, MPU6050_Data.Roll, 3);
     OLED_ShowFloat(3, 11, MPU6050_Data.Yaw, 3);
+    memcpy(buffer, &MPU6050_Data.Pitch, sizeof(MPU6050_Data.Pitch));
+    memcpy(buffer + sizeof(MPU6050_Data.Pitch), &MPU6050_Data.Roll, sizeof(MPU6050_Data.Roll));
+    UARTComms_Transmmit_Data(0x01, buffer, sizeof(MPU6050_Data));
     i=0;
     }
     i++;
