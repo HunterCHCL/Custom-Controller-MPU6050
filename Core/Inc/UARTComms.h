@@ -8,6 +8,7 @@
 #ifndef INC_UARTCOMMS_H_
 #define INC_UARTCOMMS_H_
 
+#define UARTComms_Port huart1
 extern uint8_t receivedData[48];
 extern uint8_t receivedCMD;
 void UARTComms_Transmmit_Data(uint8_t cmd,uint8_t *data,uint8_t len);

@@ -30,6 +30,7 @@
 #include "OLED.h"
 #include "OLED_Font.h"
 #include "MPU6050.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -98,11 +99,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CRC_Init();
   MX_I2C2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   UARTComms_Init();
   OLED_Init();
   MPU6050_Init();
-  MPU6050_Data_t MPU6050_Data;
+  MPU6050_Data_t MPU6050_Data={0};
   MPU6050_Calibrate(&MPU6050_Data);
   uint8_t i=0;
   uint8_t buffer[50];
@@ -123,12 +125,16 @@ int main(void)
 //	  OLED_ShowFloat(2, 1, MPU6050_Data.GyroX, 3);
 //	  OLED_ShowFloat(2, 6, MPU6050_Data.GyroY, 3);
 //	  OLED_ShowFloat(2, 11, MPU6050_Data.GyroZ, 3);
-    OLED_ShowFloat(1, 1, MPU6050_Data.Pitch, 3);
-    OLED_ShowFloat(2, 6, MPU6050_Data.Roll, 3);
-    OLED_ShowFloat(3, 11, MPU6050_Data.Yaw, 3);
+    OLED_ClearLine(1, 1, 6);
+    OLED_ClearLine(2, 1, 6);
+    OLED_ClearLine(3, 1, 6);
+    OLED_ShowFloat(1, 1, MPU6050_Data.Pitch, 1);
+    OLED_ShowFloat(2, 1, MPU6050_Data.Roll, 1);
+    OLED_ShowFloat(3, 1, MPU6050_Data.Yaw, 1);
     memcpy(buffer, &MPU6050_Data.Pitch, sizeof(MPU6050_Data.Pitch));
     memcpy(buffer + sizeof(MPU6050_Data.Pitch), &MPU6050_Data.Roll, sizeof(MPU6050_Data.Roll));
-    UARTComms_Transmmit_Data(0x01, buffer, sizeof(MPU6050_Data));
+    //memcpy(buffer + sizeof(MPU6050_Data.Pitch) + sizeof(MPU6050_Data.Roll), &MPU6050_Data.Yaw, sizeof(MPU6050_Data.Yaw));
+    UARTComms_Transmmit_Data(0x01, buffer, 8);
     i=0;
     }
     i++;

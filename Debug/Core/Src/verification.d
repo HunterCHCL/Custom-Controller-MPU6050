@@ -1,5 +1,5 @@
-Core/Src/UARTComms.o: ../Core/Src/UARTComms.c ../Core/Inc/CRCs.h \
- ../Core/Inc/UARTComms.h ../Core/Inc/usart.h ../Core/Inc/main.h \
+Core/Src/verification.o: ../Core/Src/verification.c \
+ ../Core/Inc/verification.h ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -24,11 +24,8 @@ Core/Src/UARTComms.o: ../Core/Src/UARTComms.c ../Core/Inc/CRCs.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h \
- ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
- ../Core/Inc/verification.h
-../Core/Inc/CRCs.h:
-../Core/Inc/UARTComms.h:
-../Core/Inc/usart.h:
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+../Core/Inc/verification.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 ../Core/Inc/stm32f1xx_hal_conf.h:
@@ -55,4 +52,3 @@ Core/Src/UARTComms.o: ../Core/Src/UARTComms.c ../Core/Inc/CRCs.h \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
-../Core/Inc/verification.h:

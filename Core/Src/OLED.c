@@ -125,6 +125,20 @@ void OLED_ShowFloat(uint8_t Line, uint8_t Column, float Number, uint8_t Length)
 	sprintf(Buffer, "%lu.%0*lu", IntegerPart, Length, DecimalInt);	//格式化字符串
 	OLED_ShowString(Line, Column, Buffer);				//显示字符串
 }
+void OLED_ClearLine(uint8_t Line,uint8_t Column_Start,uint8_t Column_End)
+{
+	uint8_t i;
+	OLED_SetCursor((Line - 1) * 2, Column_Start);		//设置光标位置在上半部分
+	for (i = 0; i < Column_End - Column_Start; i++)
+	{
+		OLED_WriteData(0x00);				//清除上半部分内容
+	}
+	OLED_SetCursor((Line - 1) * 2 + 1, Column_Start);	//设置光标位置在下半部分
+	for (i = 0; i < Column_End - Column_Start; i++)
+	{
+		OLED_WriteData(0x00);				//清除下半部分内容
+	}
+}
 void OLED_Init(void)
 {
 	HAL_Delay(500);

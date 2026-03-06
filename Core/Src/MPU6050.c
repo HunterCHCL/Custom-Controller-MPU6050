@@ -186,10 +186,25 @@ void MPU6050_ProcessData(MPU6050_Data_t *DataStruct)
     float accelPitch = atan2f(DataStruct->AccelY, DataStruct->AccelZ) * 57.29578f; // 180/PI
     float accelRoll = atan2f(-DataStruct->AccelX, sqrtf(DataStruct->AccelY * DataStruct->AccelY + DataStruct->AccelZ * DataStruct->AccelZ)) * 57.29578f;
 
-    // 互补滤波融合
+    // 记录上一时刻的角度用于计算变化量 (用于累计)
+    float prevPitch = DataStruct->Pitch;
+    float prevRoll = DataStruct->Roll;
+
+    // 互补滤波融合 (标准角度解算，通常在 ±180° 范围内)
     DataStruct->Pitch = alpha * (DataStruct->Pitch + DataStruct->GyroX * dt) + (1.0f - alpha) * accelPitch;
     DataStruct->Roll = alpha * (DataStruct->Roll + DataStruct->GyroY * dt) + (1.0f - alpha) * accelRoll;
     
+    // 处理角度突变 (跨越 ±180°)，并累加到总角度中
+    float dPitch = DataStruct->Pitch - prevPitch;
+    float dRoll = DataStruct->Roll - prevRoll;
+
+    // 如果变化量超过 180 度，说明发生了回绕
+    if (dPitch > 180.0f) dPitch -= 360.0f;
+    else if (dPitch < -180.0f) dPitch += 360.0f;
+
+    if (dRoll > 180.0f) dRoll -= 360.0f;
+    else if (dRoll < -180.0f) dRoll += 360.0f;
+
     // Yaw轴仅靠积分，由于没有磁力计，随着时间会有漂移
     DataStruct->Yaw += DataStruct->GyroZ * dt;
 }

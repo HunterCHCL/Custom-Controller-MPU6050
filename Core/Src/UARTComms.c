@@ -9,6 +9,7 @@
 #include "usart.h"
 #include "stdint.h"
 #include "string.h"
+#include "verification.h"
 #define PackageHead1 0xFA
 #define PackageHead2 0xAF
 
@@ -21,11 +22,11 @@ void UARTComms_Transmmit_Data(uint8_t cmd,uint8_t *data,uint8_t len)
 {
 	globalBuffer[0]=cmd;
 	memcpy(&globalBuffer[1], data, len);
-	CRC08_Append(globalBuffer, len + 2);
+	Verification_AddXOR(globalBuffer, len + 1);
 	memmove(globalBuffer+2, globalBuffer, len + 2);
 	globalBuffer[0] = PackageHead1;
 	globalBuffer[1] = PackageHead2;
-	HAL_UART_Transmit_DMA(&huart2,globalBuffer,len+4);
+	HAL_UART_Transmit_DMA(&UARTComms_Port,globalBuffer,len+4);
 }
 
 void UARTComms_Recieve_Data(uint8_t *received,uint8_t len)
@@ -45,14 +46,14 @@ void UARTComms_Recieve_Data(uint8_t *received,uint8_t len)
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-	if(huart==&huart2)
+	if(huart==&UARTComms_Port)
 	{
 		UARTComms_Recieve_Data(receiveBuffer,Size);
-		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, receiveBuffer, sizeof(receiveBuffer));
+		HAL_UARTEx_ReceiveToIdle_DMA(&UARTComms_Port, receiveBuffer, sizeof(receiveBuffer));
 	}
 }
 
 void UARTComms_Init(void)
 {
-	HAL_UARTEx_ReceiveToIdle_DMA(&huart2, receiveBuffer, sizeof(receiveBuffer));
+	HAL_UARTEx_ReceiveToIdle_DMA(&UARTComms_Port, receiveBuffer, sizeof(receiveBuffer));
 }

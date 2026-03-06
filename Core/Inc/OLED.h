@@ -20,5 +20,6 @@ void OLED_ShowFloat(uint8_t Line, uint8_t Column, float Number, uint8_t Length);
 void OLED_Init(void);
 void OLED_WriteCommand(uint8_t CMD);
 void OLED_WriteData(uint8_t Data);
+void OLED_ClearLine(uint8_t Line,uint8_t Column_Start,uint8_t Column_End);
 
 #endif /* INC_OLED_H_ */

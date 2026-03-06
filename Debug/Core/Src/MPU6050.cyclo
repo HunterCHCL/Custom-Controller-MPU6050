@@ -7,4 +7,4 @@
 ../Core/Src/MPU6050.c:108:7:MPU6050_Accel_To_G_16G	1
 ../Core/Src/MPU6050.c:118:7:MPU6050_Gyro_To_DegPerSec_2000	1
 ../Core/Src/MPU6050.c:129:6:MPU6050_Calibrate	2
-../Core/Src/MPU6050.c:160:6:MPU6050_ProcessData	1
+../Core/Src/MPU6050.c:160:6:MPU6050_ProcessData	5
